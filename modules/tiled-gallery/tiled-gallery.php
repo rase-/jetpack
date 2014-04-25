@@ -3,6 +3,7 @@
 // Include the class file containing methods for rounding constrained array elements.
 // Here the constrained array element is the dimension of a row, group or an image in the tiled gallery.
 include_once dirname( __FILE__ ) . '/math/class-constrained-array-rounding.php';
+include_once dirname( __FILE__ ) . '/tiled-gallery/class.html-builder.php';
 
 class Jetpack_Tiled_Gallery {
 
@@ -125,10 +126,19 @@ class Jetpack_Tiled_Gallery {
 
 		$output = $this->generate_carousel_container();
 		foreach ( $grouper->grouped_images as $row ) {
-			$output .= '<div class="gallery-row" style="' . esc_attr( 'width: ' . $row->width . 'px; height: ' . ( $row->height - 4 ) . 'px;' ) . '">';
+			$row_elem = HTML_Builder::element( 'div' )
+						->addClass( 'gallery-row' )
+						->css( 'width', esc_attr( $row->width ) . 'px' )
+						->css( 'height', esc_attr( $row->height ) . 'px' );
+			$row_html = '';
 			foreach( $row->groups as $group ) {
 				$count = count( $group->images );
-				$output .= '<div class="gallery-group images-' . esc_attr( $count ) . '" style="' . esc_attr( 'width: ' . $group->width . 'px; height: ' . $group->height . 'px;' ) . '">';
+				$group_elem = HTML_Builder::element( 'div' )
+							->addClass( 'gallery-group', 'images-' . esc_attr( $count ) )
+							->css( 'width', esc_attr( $group->width ) . 'px' )
+							->css( 'height', esc_attr( $group->height ) . 'px' );
+
+				$group_html = '';
 				foreach ( $group->images as $image ) {
 
 					$size = 'large';
@@ -143,21 +153,54 @@ class Jetpack_Tiled_Gallery {
 
 					$img_src = add_query_arg( array( 'w' => $image->width, 'h' => $image->height ), $orig_file );
 
-					$output .= '<div class="tiled-gallery-item tiled-gallery-item-' . esc_attr( $size ) . '"><a href="' . esc_url( $link ) . '"><img ' . $this->generate_carousel_image_args( $image ) . ' src="' . esc_url( $img_src ) . '" width="' . esc_attr( $image->width ) . '" height="' . esc_attr( $image->height ) . '" align="left" title="' . esc_attr( $image_title ) . '" alt="' . esc_attr( $image_alt ) . '" /></a>';
+					$item = HTML_Builder::element( 'div' )
+							->addClass( 'tiled-gallery-item', 'tiled-gallery-item-' . esc_attr( $size ) )
+							->content(
+								HTML_Builder::element( 'a' )
+								->href( esc_url( $link ) )
+								->content(
+									HTML_Builder::element( 'img' )
+									->raw( $this->generate_carousel_image_args( $image ) )
+									->src( esc_url( $img_src ) )
+									->width( esc_attr( $image->width ) )
+									->height( esc_attr( $image->height ) )
+									->align( 'left' )
+									->title( esc_attr( $image_title ) )
+									->alt( esc_attr( $image_alt ) )
+								)
+							);
 
 					if ( $this->atts['grayscale'] == true ) {
-						$img_src_grayscale = jetpack_photon_url( $img_src, array( 'filter' => 'grayscale' ) );
-						$output .= '<a href="'. esc_url( $link ) . '"><img ' . $this->generate_carousel_image_args( $image ) . ' class="grayscale" src="' . esc_url( $img_src_grayscale ) . '" width="' . esc_attr( $image->width ) . '" height="' . esc_attr( $image->height ) . '" align="left" title="' . esc_attr( $image_title ) . '" alt="' . esc_attr( $image_alt ) . '" /></a>';
+						$item->content(
+							HTML_Builder::element( 'a' )
+							->href( esc_url( $link ) )
+							->content(
+								HTML_Builder::element( 'img' )
+								->raw( $this->generate_carousel_image_args( $image ) )
+								->addClass( 'grayscale' )
+								->src( esc_url( $img_src_grayscale ) )
+								->width( esc_attr( $image->width ) )
+								->height( esc_attr( $image->height ) )
+								->align( 'left' )
+								->title( esc_attr( $image_title ) )
+								->alt( esc_attr( $image_alt ) )
+							)
+						);
 					}
 
-					if ( trim( $image->post_excerpt ) )
-						$output .= '<div class="tiled-gallery-caption">' . wptexturize( $image->post_excerpt ) . '</div>';
+					if ( trim( $image->post_excerpt ) ) {
+						$item->content(
+							HTML_Builder::element( 'div' )
+							->addClass( 'tiled-gallery-caption' )
+							->content( wptexturize( $image->post_excerpt ) )
+						);
+					}
 
-					$output .= '</div>';
+					$group_html .= $item->build();
 				}
-				$output .= '</div>';
+				$row_html .= $group_elem->content( $group_html )->build();
 			}
-			$output .= '</div>';
+			$output .= $row_elem->content( $row_html )->build();
 		}
 		$output .= '</div>';
 		return $output;
@@ -189,19 +232,53 @@ class Jetpack_Tiled_Gallery {
 
 			$img_src = add_query_arg( array( 'w' => $img_size, 'h' => $img_size, 'crop' => 1 ), $orig_file );
 
-			$output .= '<div class="tiled-gallery-item">';
-			$output .= '<a border="0" href="' . esc_url( $link ) . '"><img ' . $this->generate_carousel_image_args( $image ) . ' style="' . esc_attr( 'margin: ' . $margin . 'px' ) . '" src="' . esc_url( $img_src ) . '" width=' . esc_attr( $img_size ) . ' height=' . esc_attr( $img_size ) . ' title="' . esc_attr( $image_title ) . '" /></a>';
+			$item = HTML_Builder::element( 'div' )
+					->addClass( 'tiled-gallery-item' )
+					->content(
+						HTML_Builder::element( 'a' )
+						->border( '0' )
+						->href( esc_url( $link ) )
+						->content(
+							HTML_Builder::element( 'img' )
+							->raw( $this->generate_carousel_image_args( $image ) )
+							->css( 'margin', esc_attr( $margin ) . 'px' )
+							->src( esc_url( $img_src ) )
+							->width( esc_attr( $img_size ) )
+							->height( esc_attr( $img_size ) )
+							->title( esc_attr( $image_title ) )
+						)
+					);
 
 			// Grayscale effect
 			if ( $this->atts['grayscale'] == true ) {
 				$src = urlencode( $image->guid );
-				$output .= '<a border="0" href="' . esc_url( $link ) . '"><img ' . $this->generate_carousel_image_args( $image ) . ' style="margin: 2px" class="grayscale" src="' . esc_url( 'http://en.wordpress.com/imgpress?url=' . urlencode( $image->guid ) . '&resize=' . $img_size . ',' . $img_size . '&filter=grayscale' ) . '" width=' . esc_attr( $img_size ) . ' height=' . esc_attr( $img_size ) . ' title="' . esc_attr( $image_title ) . '" /></a>';
+				$item->content(
+					HTML_Builder::element( 'a' )
+					->border( '0' )
+					->href( esc_url( $link ) )
+					->content(
+						HTML_Builder::element( 'img' )
+						->raw( $this->generate_carousel_image_args( $image ) )
+						->css( 'margin', '2px' )
+						->addClass( 'grayscale' )
+						->src( esc_url( 'http://en.wordpress.com/imgpress?url=' . urlencode( $image->guid ) . '&resize=' . $img_size . ',' . $img_size . '&filter=grayscale' ) )
+						->width( esc_attr( $img_size ) )
+						->height( esc_attr( $img_size ) )
+						->title( esc_attr( $image_title ) )
+					)
+				);
 			}
 
 			// Captions
-			if ( trim( $image->post_excerpt ) )
-				$output .= '<div class="tiled-gallery-caption">' . wptexturize( $image->post_excerpt ) . '</div>';
-			$output .= '</div>';
+			if ( trim( $image->post_excerpt ) ) {
+				$item->content(
+					HTML_Builder::element( 'div' )
+					->addClass( 'tiled-gallery-caption' )
+					->content( wptexturize( $image->post_excerpt ) )
+				);
+			}
+
+			$output .= $item->build();
 			$c ++;
 		}
 		$output .= '</div>';
