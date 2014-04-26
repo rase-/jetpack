@@ -1,5 +1,5 @@
 <?php
-class HTML_Builder {
+class Jetpack_HTML_Builder {
 	private $tag;
 	private $content;
 	private $classes;

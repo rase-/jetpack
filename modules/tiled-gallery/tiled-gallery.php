@@ -126,14 +126,14 @@ class Jetpack_Tiled_Gallery {
 
 		$output = $this->generate_carousel_container();
 		foreach ( $grouper->grouped_images as $row ) {
-			$row_elem = HTML_Builder::element( 'div' )
+			$row_elem = Jetpack_HTML_Builder::element( 'div' )
 						->addClass( 'gallery-row' )
 						->css( 'width', esc_attr( $row->width ) . 'px' )
 						->css( 'height', esc_attr( $row->height ) . 'px' );
 			$row_html = '';
 			foreach( $row->groups as $group ) {
 				$count = count( $group->images );
-				$group_elem = HTML_Builder::element( 'div' )
+				$group_elem = Jetpack_HTML_Builder::element( 'div' )
 							->addClass( 'gallery-group', 'images-' . esc_attr( $count ) )
 							->css( 'width', esc_attr( $group->width ) . 'px' )
 							->css( 'height', esc_attr( $group->height ) . 'px' );
@@ -153,13 +153,13 @@ class Jetpack_Tiled_Gallery {
 
 					$img_src = add_query_arg( array( 'w' => $image->width, 'h' => $image->height ), $orig_file );
 
-					$item = HTML_Builder::element( 'div' )
+					$item = Jetpack_HTML_Builder::element( 'div' )
 							->addClass( 'tiled-gallery-item', 'tiled-gallery-item-' . esc_attr( $size ) )
 							->content(
-								HTML_Builder::element( 'a' )
+								Jetpack_HTML_Builder::element( 'a' )
 								->href( esc_url( $link ) )
 								->content(
-									HTML_Builder::element( 'img' )
+									Jetpack_HTML_Builder::element( 'img' )
 									->raw( $this->generate_carousel_image_args( $image ) )
 									->src( esc_url( $img_src ) )
 									->width( esc_attr( $image->width ) )
@@ -172,10 +172,10 @@ class Jetpack_Tiled_Gallery {
 
 					if ( $this->atts['grayscale'] == true ) {
 						$item->content(
-							HTML_Builder::element( 'a' )
+							Jetpack_HTML_Builder::element( 'a' )
 							->href( esc_url( $link ) )
 							->content(
-								HTML_Builder::element( 'img' )
+								Jetpack_HTML_Builder::element( 'img' )
 								->raw( $this->generate_carousel_image_args( $image ) )
 								->addClass( 'grayscale' )
 								->src( esc_url( $img_src_grayscale ) )
@@ -190,7 +190,7 @@ class Jetpack_Tiled_Gallery {
 
 					if ( trim( $image->post_excerpt ) ) {
 						$item->content(
-							HTML_Builder::element( 'div' )
+							Jetpack_HTML_Builder::element( 'div' )
 							->addClass( 'tiled-gallery-caption' )
 							->content( wptexturize( $image->post_excerpt ) )
 						);
@@ -232,14 +232,14 @@ class Jetpack_Tiled_Gallery {
 
 			$img_src = add_query_arg( array( 'w' => $img_size, 'h' => $img_size, 'crop' => 1 ), $orig_file );
 
-			$item = HTML_Builder::element( 'div' )
+			$item = Jetpack_HTML_Builder::element( 'div' )
 					->addClass( 'tiled-gallery-item' )
 					->content(
-						HTML_Builder::element( 'a' )
+						Jetpack_HTML_Builder::element( 'a' )
 						->border( '0' )
 						->href( esc_url( $link ) )
 						->content(
-							HTML_Builder::element( 'img' )
+							Jetpack_HTML_Builder::element( 'img' )
 							->raw( $this->generate_carousel_image_args( $image ) )
 							->css( 'margin', esc_attr( $margin ) . 'px' )
 							->src( esc_url( $img_src ) )
@@ -253,11 +253,11 @@ class Jetpack_Tiled_Gallery {
 			if ( $this->atts['grayscale'] == true ) {
 				$src = urlencode( $image->guid );
 				$item->content(
-					HTML_Builder::element( 'a' )
+					Jetpack_HTML_Builder::element( 'a' )
 					->border( '0' )
 					->href( esc_url( $link ) )
 					->content(
-						HTML_Builder::element( 'img' )
+						Jetpack_HTML_Builder::element( 'img' )
 						->raw( $this->generate_carousel_image_args( $image ) )
 						->css( 'margin', '2px' )
 						->addClass( 'grayscale' )
@@ -272,7 +272,7 @@ class Jetpack_Tiled_Gallery {
 			// Captions
 			if ( trim( $image->post_excerpt ) ) {
 				$item->content(
-					HTML_Builder::element( 'div' )
+					Jetpack_HTML_Builder::element( 'div' )
 					->addClass( 'tiled-gallery-caption' )
 					->content( wptexturize( $image->post_excerpt ) )
 				);
