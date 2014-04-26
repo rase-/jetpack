@@ -1,5 +1,5 @@
 <?php
-class HTML_Builder {
+class Jetpack_HTML_Builder {
 	private $tag;
 	private $content;
 	private $classes;
@@ -73,12 +73,17 @@ class HTML_Builder {
 	}
 
 	public function content( $content ) {
-		if ( $content instanceof HTML_Builder ) {
+		if ( $content instanceof Jetpack_HTML_Builder ) {
 			$content = $content->build();
 		}
 
 		$this->content .= $content;
 		return $this;
+	}
+
+	// Alias for content
+	public function addContent( $content ) {
+		$this->content( $content );
 	}
 
 	public function tag( $tagName ) {
@@ -115,7 +120,7 @@ class HTML_Builder {
 
 	// For easy chaining when intializing the builder, passing in the tag too
 	public static function element( $tagName = null ) {
-		$builder = new HTML_Builder();
+		$builder = new Jetpack_HTML_Builder();
 		if ( isset( $tagName ) ) {
 			$builder = $builder->tag( $tagName );
 		}
