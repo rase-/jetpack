@@ -1,5 +1,95 @@
 <?php
 
+class Photon_Element {
+	public $link;
+	public $img_url;
+	private $attrs;
+	private $classes;
+
+	public function __construct( $link_url, $image_tag, $image_url ) {
+		$this->parse_image( $image_tag );
+		$this->link = $img['link_url'];
+		$this->img_url = $image_url;
+	}
+
+	public function has_attr( $attr ) {
+		return isset( $this->attrs[$attr] );
+	}
+
+	public function attr( $attr, $val=null ) {
+		if ( ! isset( $val ) ) {
+			return $this->attrs[$attr];
+		}
+
+		$this->attrs[$attr] = $val;
+		return $this;
+	}
+
+	public function attr_unset( $attr ) {
+		unset( $this->attrs[$attr] );
+	}
+
+	public function has_class( $class ) {
+		return isset( $this->classes[$class] );
+	}
+
+	public function class_postfix( $class_prefix ) {
+		foreach( $this->classes as $class ) {
+			$split = explode( $class_prefix, $class );
+			if ( count( $split ) == 2 ) {
+				return $split[1];
+			}
+		}
+
+		return false;
+	}
+
+	public function HTML() {
+		$el = Jetpack_HTML_Builder::element( 'img' );
+		foreach ( $this->classes as $class ) {
+			$el->class( $class );
+		}
+
+		foreach ( $this->attrs as $attr => $val ) {
+			$el->attr( $attr, $val );
+		}
+
+		return $el->build();
+	}
+
+	private function parse_image( $html_str ) {
+		$attrs = $this->parse_attributes( $html_str );
+		$this->classes = isset( $attrs['class'] ) ? explode( ' ', $attrs['class'] ) : array();
+
+		unset( $attrs['class'] );
+		unset( $attrs['img'] ); // Produced by regex and is not an attribute
+		$this->attrs = $attrs;
+	}
+
+	// https://gist.github.com/rodneyrehm/3070128
+	private function parse_attributes( $text ) {
+		$attributes = array();
+    	$pattern = '#(?(DEFINE)
+    	        (?<name>[a-zA-Z][a-zA-Z0-9-:]*)
+    	        (?<value_double>"[^"]+")
+    	        (?<value_single>\'[^\']+\')
+    	        (?<value_none>[^\s>]+)
+    	        (?<value>((?&value_double)|(?&value_single)|(?&value_none)))
+    	    )
+    	    (?<n>(?&name))(=(?<v>(?&value)))?#xs';
+
+    	if ( preg_match_all( $pattern, $text, $matches, PREG_SET_ORDER ) ) {
+    	    foreach ( $matches as $match ) {
+    	        $attributes[$match['n']] = isset( $match['v'] )
+    	            ? trim( $match['v'], '\'"' )
+    	            : null;
+    	    }
+    	}
+
+    	return $attributes;
+	}
+}
+
 class Jetpack_Photon {
 	/**
 	 * Class variables
@@ -139,6 +229,8 @@ class Jetpack_Photon {
 			$upload_dir = wp_upload_dir();
 
 			foreach ( $images[0] as $index => $tag ) {
+				$photon_elem = new Photon_Element( $images['link_url'][$index], $images['img_tag'][$index], $images['img_url'][$index] );
+
 				// Default to resize, though fit may be used in certain cases where a dimension cannot be ascertained
 				$transform = 'resize';
 
@@ -149,7 +241,7 @@ class Jetpack_Photon {
 				$fullsize_url = false;
 
 				// Identify image source
-				$src = $src_orig = $images['img_url'][ $index ];
+				$src = $src_orig = $photon_elem->img_url;
 
 				// Allow specific images to be skipped
 				if ( apply_filters( 'jetpack_photon_skip_image', false, $src, $tag ) )
@@ -157,9 +249,9 @@ class Jetpack_Photon {
 
 				// Support Automattic's Lazy Load plugin
 				// Can't modify $tag yet as we need unadulterated version later
-				if ( preg_match( '#data-lazy-src=["|\'](.+?)["|\']#i', $images['img_tag'][ $index ], $lazy_load_src ) ) {
+				if ( $photon_elem->has_attr( 'data-lazy-src' ) ) {
 					$placeholder_src = $placeholder_src_orig = $src;
-					$src = $src_orig = $lazy_load_src[1];
+					$src = $src_orig = $photon_elem->attr( 'data-lazy-src' );
 				}
 
 				// Check if image URL should be used with Photon
@@ -168,20 +260,18 @@ class Jetpack_Photon {
 					$width = $height = false;
 
 					// First, check the image tag
-					if ( preg_match( '#width=["|\']?([\d%]+)["|\']?#i', $images['img_tag'][ $index ], $width_string ) )
-						$width = $width_string[1];
+					if ( $photon_elem->has_attr( 'width' ) )
+						$width = $photon_elem->attr( 'width' );
 
-					if ( preg_match( '#height=["|\']?([\d%]+)["|\']?#i', $images['img_tag'][ $index ], $height_string ) )
-						$height = $height_string[1];
+					if ( $photon_elem->has_attr( 'height' ) )
+						$height = $photon_elem->attr( 'height' );
 
 					// Can't pass both a relative width and height, so unset the height in favor of not breaking the horizontal layout.
 					if ( false !== strpos( $width, '%' ) && false !== strpos( $height, '%' ) )
 						$width = $height = false;
 
 					// Detect WP registered image size from HTML class
-					if ( preg_match( '#class=["|\']?[^"\']*size-([^"\'\s]+)[^"\']*["|\']?#i', $images['img_tag'][ $index ], $size ) ) {
-						$size = array_pop( $size );
-
+					if ( $size = $photon_elem->class_postfix( 'size-' ) ) {
 						if ( false === $width && false === $height && 'full' != $size && array_key_exists( $size, $image_sizes ) ) {
 							$width = (int) $image_sizes[ $size ]['width'];
 							$height = (int) $image_sizes[ $size ]['height'];
@@ -192,8 +282,7 @@ class Jetpack_Photon {
 					}
 
 					// WP Attachment ID, if uploaded to this site
-					if ( preg_match( '#class=["|\']?[^"\']*wp-image-([\d]+)[^"\']*["|\']?#i', $images['img_tag'][ $index ], $attachment_id ) && ( 0 === strpos( $src, $upload_dir['baseurl'] ) || apply_filters( 'jetpack_photon_image_is_local', false, compact( 'src', 'tag', 'images', 'index' ) ) ) ) {
-						$attachment_id = intval( array_pop( $attachment_id ) );
+					if ( $attachment_id = $photon_elem->class_postfix( 'wp-image-' ) && ( 0 === strpos( $src, $upload_dir['baseurl'] ) || apply_filters( 'jetpack_photon_image_is_local', false, compact( 'src', 'tag', 'images', 'index' ) ) ) ) {
 
 						if ( $attachment_id ) {
 							$attachment = get_post( $attachment_id );
@@ -281,31 +370,37 @@ class Jetpack_Photon {
 						$new_tag = $tag;
 
 						// If present, replace the link href with a Photoned URL for the full-size image.
-						if ( ! empty( $images['link_url'][ $index ] ) && self::validate_image_url( $images['link_url'][ $index ] ) )
-							$new_tag = preg_replace( '#(href=["|\'])' . $images['link_url'][ $index ] . '(["|\'])#i', '\1' . jetpack_photon_url( $images['link_url'][ $index ] ) . '\2', $new_tag, 1 );
+						if ( ! empty( $photon_elem->link ) && self::validate_image_url( $photon_elem->link ) )
+							$photon_elem->attr( 'href', jetpack_photon_url( $photon_elem->link ) );
 
 						// Supplant the original source value with our Photon URL
 						$photon_url = esc_url( $photon_url );
-						$new_tag = str_replace( $src_orig, $photon_url, $new_tag );
+
+						if ( $photon_elem->has_attr( 'data-lazy-src' ) ) {
+							$photon_elem->attr( 'data-lazy-src', $src );
+						} else {
+							$photon_elem->attr( 'src', $photon_url );
+						}
 
 						// If Lazy Load is in use, pass placeholder image through Photon
 						if ( isset( $placeholder_src ) && self::validate_image_url( $placeholder_src ) ) {
 							$placeholder_src = jetpack_photon_url( $placeholder_src );
 
 							if ( $placeholder_src != $placeholder_src_orig )
-								$new_tag = str_replace( $placeholder_src_orig, esc_url( $placeholder_src ), $new_tag );
+								$photon_elem->attr( 'src', esc_url( $placeholder_src ) );
 
 							unset( $placeholder_src );
 						}
 
 						// Remove the width and height arguments from the tag to prevent distortion
-						$new_tag = preg_replace( '#(width|height)=["|\']?[\d%]+["|\']?\s?#i', '', $new_tag );
+						$photon_elem->attr_unset( 'width' );
+						$photon_elem->attr_unset( 'height' );
 
 						// Tag an image for dimension checking
-						$new_tag = preg_replace( '#(\s?/)?>(</a>)?$#i', ' data-recalc-dims="1"\1>\2', $new_tag );
+						$photon_elem->attr( 'data-recalc-dims', '1' );
 
 						// Replace original tag with modified version
-						$content = str_replace( $tag, $new_tag, $content );
+						$content = str_replace( $tag, $photon_elem->HTML(), $content );
 					}
 				} elseif ( preg_match( '#^http(s)?://i[\d]{1}.wp.com#', $src ) && ! empty( $images['link_url'][ $index ] ) && self::validate_image_url( $images['link_url'][ $index ] ) ) {
 					$new_tag = preg_replace( '#(href=["|\'])' . $images['link_url'][ $index ] . '(["|\'])#i', '\1' . jetpack_photon_url( $images['link_url'][ $index ] ) . '\2', $tag, 1 );
