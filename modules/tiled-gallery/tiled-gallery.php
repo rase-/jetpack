@@ -126,13 +126,14 @@ class Jetpack_Tiled_Gallery {
 		$needs_attachment_link = ! ( isset( $this->atts['link'] ) && $this->atts['link'] == 'file' );
 		$output = $this->generate_carousel_container();
 		foreach ( $grouper->grouped_images as $row ) {
-			$output .= $row->HTML( $needs_attachment_link, $grayscale );
+			$output .= $row->HTML( $needs_attachment_link, $this->attrs['grayscale'] );
 		}
 		$output .= '</div>';
 		return $output;
 	}
 
 	public function square_talavera( $attachments ) {
+		$needs_attachment_link = ! ( isset( $this->atts['link'] ) && $this->atts['link'] == 'file' );
 		$content_width = self::get_content_width();
 		$images_per_row = 3;
 		$margin = 2;
@@ -152,59 +153,11 @@ class Jetpack_Tiled_Gallery {
 			else
 				$img_size = $size;
 
-			$orig_file = wp_get_attachment_url( $image->ID );
-			$link = $this->get_attachment_link( $image->ID, $orig_file );
-			$image_title = $image->post_title;
+			$image->width = $image->height = $img_size;
 
-			$img_src = add_query_arg( array( 'w' => $img_size, 'h' => $img_size, 'crop' => 1 ), $orig_file );
+			$item = new Jetpack_Tiled_Gallery_Item( $image, $needs_attachment_link, 'square' );
 
-			$item = Jetpack_HTML_Builder::element( 'div' )
-					->addClass( 'tiled-gallery-item' )
-					->content(
-						Jetpack_HTML_Builder::element( 'a' )
-						->border( '0' )
-						->href( esc_url( $link ) )
-						->content(
-							Jetpack_HTML_Builder::element( 'img' )
-							->raw( $this->generate_carousel_image_args( $image ) )
-							->css( 'margin', esc_attr( $margin ) . 'px' )
-							->src( esc_url( $img_src ) )
-							->width( esc_attr( $img_size ) )
-							->height( esc_attr( $img_size ) )
-							->title( esc_attr( $image_title ) )
-						)
-					);
-
-			// Grayscale effect
-			if ( $this->atts['grayscale'] == true ) {
-				$src = urlencode( $image->guid );
-				$item->content(
-					Jetpack_HTML_Builder::element( 'a' )
-					->border( '0' )
-					->href( esc_url( $link ) )
-					->content(
-						Jetpack_HTML_Builder::element( 'img' )
-						->raw( $this->generate_carousel_image_args( $image ) )
-						->css( 'margin', '2px' )
-						->addClass( 'grayscale' )
-						->src( esc_url( 'http://en.wordpress.com/imgpress?url=' . urlencode( $image->guid ) . '&resize=' . $img_size . ',' . $img_size . '&filter=grayscale' ) )
-						->width( esc_attr( $img_size ) )
-						->height( esc_attr( $img_size ) )
-						->title( esc_attr( $image_title ) )
-					)
-				);
-			}
-
-			// Captions
-			if ( trim( $image->post_excerpt ) ) {
-				$item->content(
-					Jetpack_HTML_Builder::element( 'div' )
-					->addClass( 'tiled-gallery-caption' )
-					->content( wptexturize( $image->post_excerpt ) )
-				);
-			}
-
-			$output .= $item->build();
+			$output .= $item->HTML( $this->attrs['grayscale'] );
 			$c ++;
 		}
 		$output .= '</div>';
@@ -637,7 +590,7 @@ class Jetpack_Tiled_Gallery_Group {
 				->css( 'height', esc_attr( $this->height ) . 'px' );
 
 		foreach ( $this->images as $image ) {
-			$gallery_item = new Jetpack_Tiled_Gallery_Item( $image, $needs_attachment_link );
+			$gallery_item = new Jetpack_Tiled_Gallery_Item( $image, $needs_attachment_link, 'mosaic' );
 			$el->content( $gallery_item->HTML( $grayscale ) );
 		}
 
@@ -648,8 +601,9 @@ class Jetpack_Tiled_Gallery_Group {
 class Jetpack_Tiled_Gallery_Item {
 	private $image;
 
-	public function __construct( $attachment_image, $needs_attachment_link ) {
+	public function __construct( $attachment_image, $needs_attachment_link, $type ) {
 		$this->image = $attachment_image;
+		$this->type = $type;
 
 		$this->size = 'large';
 
@@ -662,30 +616,41 @@ class Jetpack_Tiled_Gallery_Item {
 		$this->link = $needs_attachment_link ? get_attachment_link( $this->image->ID, $this->orig_file ) : $this->orig_file;
 
 		$this->img_src = add_query_arg( array( 'w' => $this->image->width, 'h' => $this->image->height ), $this->orig_file );
+
+		$this->img_src_grayscale = jetpack_photon_url( $this->img_src, array( 'filter' => 'grayscale' ) );
 	}
 
 	public function HTML( $grayscale ) {
+		// Base elements
 		$el = Jetpack_HTML_Builder::element( 'div' )
-				->addClass( 'tiled-gallery-item', 'tiled-gallery-item-' . esc_attr( $this->size ) )
-				->content(
-					Jetpack_HTML_Builder::element( 'a' )
-					->href( esc_url( $this->link ) )
-					->content(
-						Jetpack_HTML_Builder::element( 'img' )
-						->raw( Jetpack_Tiled_Gallery_Item::generate_carousel_image_args( $this->image ) )
-						->src( esc_url( $this->img_src ) )
-						->width( esc_attr( $this->image->width ) )
-						->height( esc_attr( $this->image->height ) )
-						->align( 'left' )
-						->title( esc_attr( $this->image_title ) )
-						->alt( esc_attr( $this->image_alt ) )
-					)
-				);
+				->addClass( 'tiled-gallery-item', 'tiled-gallery-item-' . esc_attr( $this->size ) );
+		$a = Jetpack_HTML_Builder::element( 'a' )
+				->href( esc_url( $this->link ) );
+		$img = Jetpack_HTML_Builder::element( 'img' )
+				->raw( Jetpack_Tiled_Gallery_Item::generate_carousel_image_args( $this->image ) )
+				->src( esc_url( $this->img_src ) )
+				->width( esc_attr( $this->image->width ) )
+				->height( esc_attr( $this->image->height ) )
+				->title( esc_attr( $this->image_title ) )
+				->alt( esc_attr( $this->image_alt ) );
 
+		// Set layout type specific things
+		if ( 'square' == $this->type ) {
+			$img->css( 'margin', esc_attr( $margin ) . 'px' );
+			$a->border('0');
+		} else if ( 'mosaic' == $this->type ) {
+			$img->align( 'left' );
+		}
+
+		// Build basic structure
+		$el->content( $a->content( $img ) );
+
+		// Grayscale overlay
 		if ( $grayscale == true ) {
 			$el->content( $this->grayscale_image() );
 		}
 
+		// Caption
 		if ( trim( $image->post_excerpt ) ) {
 			$el->content( $this->caption() );
 		}
@@ -694,19 +659,26 @@ class Jetpack_Tiled_Gallery_Item {
 	}
 
 	private function grayscale_image() {
-		return Jetpack_HTML_Builder::element( 'a' )
-				->href( esc_url( $this->link ) )
-				->content(
-					Jetpack_HTML_Builder::element( 'img' )
-					->raw( Jetpack_Tiled_Gallery_Item::generate_carousel_image_args( $this->image ) )
-					->addClass( 'grayscale' )
-					->src( esc_url( $this->img_src_grayscale ) )
-					->width( esc_attr( $this->image->width ) )
-					->height( esc_attr( $this->image->height ) )
-					->align( 'left' )
-					->title( esc_attr( $this->image_title ) )
-					->alt( esc_attr( $this->image_alt ) )
-				);
+		$a = Jetpack_HTML_Builder::element( 'a' )
+				->href( esc_url( $this->link ) );
+		$img = Jetpack_HTML_Builder::element( 'img' )
+				->raw( Jetpack_Tiled_Gallery_Item::generate_carousel_image_args( $this->image ) )
+				->addClass( 'grayscale' )
+				->width( esc_attr( $this->image->width ) )
+				->height( esc_attr( $this->image->height ) )
+				->align( 'left' )
+				->title( esc_attr( $this->image_title ) )
+				->alt( esc_attr( $this->image_alt ) );
+
+		if ( 'square' == $this->type ) {
+			$a->border('0');
+			$img->css( 'margin', '2px' );
+			$img->src( esc_url( 'http://en.wordpress.com/imgpress?url=' . urlencode( $this->image->guid ) . '&resize=' . $this->image->width . ',' . $this->image->height . '&filter=grayscale' ) );
+		} else if ( 'mosaic' == $this->type ) {
+			$img->src( esc_url( $this->img_src_grayscale ) );
+		}
+
+		return $a->content( $img );
 	}
 
 	private function caption() {
