@@ -123,83 +123,10 @@ class Jetpack_Tiled_Gallery {
 
 		Jetpack_Tiled_Gallery_Shape::reset_last_shape();
 
+		$needs_attachment_link = ! ( isset( $this->atts['link'] ) && $this->atts['link'] == 'file' );
 		$output = $this->generate_carousel_container();
 		foreach ( $grouper->grouped_images as $row ) {
-			$row_elem = Jetpack_HTML_Builder::element( 'div' )
-						->addClass( 'gallery-row' )
-						->css( 'width', esc_attr( $row->width ) . 'px' )
-						->css( 'height', esc_attr( $row->height ) . 'px' );
-			$row_html = '';
-			foreach( $row->groups as $group ) {
-				$count = count( $group->images );
-				$group_elem = Jetpack_HTML_Builder::element( 'div' )
-							->addClass( 'gallery-group', 'images-' . esc_attr( $count ) )
-							->css( 'width', esc_attr( $group->width ) . 'px' )
-							->css( 'height', esc_attr( $group->height ) . 'px' );
-
-				$group_html = '';
-				foreach ( $group->images as $image ) {
-
-					$size = 'large';
-
-					if ( $image->width < 250 )
-						$size = 'small';
-
-					$image_title = $image->post_title;
-					$image_alt = get_post_meta( $image->ID, '_wp_attachment_image_alt', true );
-					$orig_file = wp_get_attachment_url( $image->ID );
-					$link = $this->get_attachment_link( $image->ID, $orig_file );
-
-					$img_src = add_query_arg( array( 'w' => $image->width, 'h' => $image->height ), $orig_file );
-
-					$item = Jetpack_HTML_Builder::element( 'div' )
-							->addClass( 'tiled-gallery-item', 'tiled-gallery-item-' . esc_attr( $size ) )
-							->content(
-								Jetpack_HTML_Builder::element( 'a' )
-								->href( esc_url( $link ) )
-								->content(
-									Jetpack_HTML_Builder::element( 'img' )
-									->raw( $this->generate_carousel_image_args( $image ) )
-									->src( esc_url( $img_src ) )
-									->width( esc_attr( $image->width ) )
-									->height( esc_attr( $image->height ) )
-									->align( 'left' )
-									->title( esc_attr( $image_title ) )
-									->alt( esc_attr( $image_alt ) )
-								)
-							);
-
-					if ( $this->atts['grayscale'] == true ) {
-						$item->content(
-							Jetpack_HTML_Builder::element( 'a' )
-							->href( esc_url( $link ) )
-							->content(
-								Jetpack_HTML_Builder::element( 'img' )
-								->raw( $this->generate_carousel_image_args( $image ) )
-								->addClass( 'grayscale' )
-								->src( esc_url( $img_src_grayscale ) )
-								->width( esc_attr( $image->width ) )
-								->height( esc_attr( $image->height ) )
-								->align( 'left' )
-								->title( esc_attr( $image_title ) )
-								->alt( esc_attr( $image_alt ) )
-							)
-						);
-					}
-
-					if ( trim( $image->post_excerpt ) ) {
-						$item->content(
-							Jetpack_HTML_Builder::element( 'div' )
-							->addClass( 'tiled-gallery-caption' )
-							->content( wptexturize( $image->post_excerpt ) )
-						);
-					}
-
-					$group_html .= $item->build();
-				}
-				$row_html .= $group_elem->content( $group_html )->build();
-			}
-			$output .= $row_elem->content( $row_html )->build();
+			$output .= $row->HTML( $needs_attachment_link, $grayscale );
 		}
 		$output .= '</div>';
 		return $output;
@@ -671,6 +598,18 @@ class Jetpack_Tiled_Gallery_Row {
 		}
 		return $weighted_ratio > 0 ? $weighted_ratio : 1;
 	}
+
+	public function HTML( $needs_attachment_link, $grayscale ) {
+		$el = Jetpack_HTML_Builder::element( 'div' )
+				->addClass( 'gallery-row' )
+				->css( 'width', esc_attr( $this->width ) . 'px' )
+				->css( 'height', esc_attr( $this->height ) . 'px' );
+		foreach ( $this->groups as $group ) {
+			$el->content( $group->HTML( $needs_attachment_link, $grayscale ) );
+		}
+
+		return $el->build();
+	}
 }
 
 class Jetpack_Tiled_Gallery_Group {
@@ -689,6 +628,132 @@ class Jetpack_Tiled_Gallery_Group {
 			return 1;
 
 		return 1/$ratio;
+	}
+
+	public function HTML( $needs_attachment_link, $grayscale ) {
+		$el = Jetpack_HTML_Builder::element( 'div' )
+				->addClass( 'gallery-group', 'images-' . esc_attr( count( $this->images ) ) )
+				->css( 'width', esc_attr( $this->width ) . 'px' )
+				->css( 'height', esc_attr( $this->height ) . 'px' );
+
+		foreach ( $this->images as $image ) {
+			$gallery_item = new Jetpack_Tiled_Gallery_Item( $image, $needs_attachment_link );
+			$el->content( $gallery_item->HTML( $grayscale ) );
+		}
+
+		return $el->build();
+	}
+}
+
+class Jetpack_Tiled_Gallery_Item {
+	private $image;
+
+	public function __construct( $attachment_image, $needs_attachment_link ) {
+		$this->image = $attachment_image;
+
+		$this->size = 'large';
+
+		if ( $this->image->width < 250 )
+				$this->size = 'small';
+
+		$this->image_title = $this->image->post_title;
+		$this->image_alt = get_post_meta( $this->image->ID, '_wp_attachment_image_alt', true );
+		$this->orig_file = wp_get_attachment_url( $this->image->ID );
+		$this->link = $needs_attachment_link ? get_attachment_link( $this->image->ID, $this->orig_file ) : $this->orig_file;
+
+		$this->img_src = add_query_arg( array( 'w' => $this->image->width, 'h' => $this->image->height ), $this->orig_file );
+	}
+
+	public function HTML( $grayscale ) {
+		$el = Jetpack_HTML_Builder::element( 'div' )
+				->addClass( 'tiled-gallery-item', 'tiled-gallery-item-' . esc_attr( $this->size ) )
+				->content(
+					Jetpack_HTML_Builder::element( 'a' )
+					->href( esc_url( $this->link ) )
+					->content(
+						Jetpack_HTML_Builder::element( 'img' )
+						->raw( Jetpack_Tiled_Gallery_Item::generate_carousel_image_args( $this->image ) )
+						->src( esc_url( $this->img_src ) )
+						->width( esc_attr( $this->image->width ) )
+						->height( esc_attr( $this->image->height ) )
+						->align( 'left' )
+						->title( esc_attr( $this->image_title ) )
+						->alt( esc_attr( $this->image_alt ) )
+					)
+				);
+
+		if ( $grayscale == true ) {
+			$el->content( $this->grayscale_image() );
+		}
+
+		if ( trim( $image->post_excerpt ) ) {
+			$el->content( $this->caption() );
+		}
+
+		return $el->build();
+	}
+
+	private function grayscale_image() {
+		return Jetpack_HTML_Builder::element( 'a' )
+				->href( esc_url( $this->link ) )
+				->content(
+					Jetpack_HTML_Builder::element( 'img' )
+					->raw( Jetpack_Tiled_Gallery_Item::generate_carousel_image_args( $this->image ) )
+					->addClass( 'grayscale' )
+					->src( esc_url( $this->img_src_grayscale ) )
+					->width( esc_attr( $this->image->width ) )
+					->height( esc_attr( $this->image->height ) )
+					->align( 'left' )
+					->title( esc_attr( $this->image_title ) )
+					->alt( esc_attr( $this->image_alt ) )
+				);
+	}
+
+	private function caption() {
+		return Jetpack_HTML_Builder::element( 'div' )
+				->addClass( 'tiled-gallery-caption' )
+				->content( wptexturize( $this->image->post_excerpt ) );
+	}
+
+	public static function generate_carousel_image_args( $image ) {
+		$attachment_id = $image->ID;
+		$orig_file       = wp_get_attachment_url( $attachment_id );
+		$meta            = wp_get_attachment_metadata( $attachment_id );
+		$size            = isset( $meta['width'] ) ? intval( $meta['width'] ) . ',' . intval( $meta['height'] ) : '';
+		$img_meta        = ( ! empty( $meta['image_meta'] ) ) ? (array) $meta['image_meta'] : array();
+		$comments_opened = intval( comments_open( $attachment_id ) );
+
+		$medium_file_info = wp_get_attachment_image_src( $attachment_id, 'medium' );
+		$medium_file      = isset( $medium_file_info[0] ) ? $medium_file_info[0] : '';
+
+		$large_file_info  = wp_get_attachment_image_src( $attachment_id, 'large' );
+		$large_file       = isset( $large_file_info[0] ) ? $large_file_info[0] : '';
+		$attachment_title = wptexturize( $image->post_title );
+		$attachment_desc  = wpautop( wptexturize( $image->post_content ) );
+
+        // Not yet providing geo-data, need to "fuzzify" for privacy
+		if ( ! empty( $img_meta ) ) {
+            foreach ( $img_meta as $k => $v ) {
+                if ( 'latitude' == $k || 'longitude' == $k )
+                    unset( $img_meta[$k] );
+            }
+        }
+
+		$img_meta = json_encode( array_map( 'strval', $img_meta ) );
+
+		$output = sprintf(
+				'data-attachment-id="%1$d" data-orig-file="%2$s" data-orig-size="%3$s" data-comments-opened="%4$s" data-image-meta="%5$s" data-image-title="%6$s" data-image-description="%7$s" data-medium-file="%8$s" data-large-file="%9$s"',
+				esc_attr( $attachment_id ),
+				esc_url( wp_get_attachment_url( $attachment_id ) ),
+				esc_attr( $size ),
+				esc_attr( $comments_opened ),
+				esc_attr( $img_meta ),
+				esc_attr( $attachment_title ),
+				esc_attr( $attachment_desc ),
+				esc_url( $medium_file ),
+				esc_url( $large_file )
+			);
+		return $output;
 	}
 }
 
