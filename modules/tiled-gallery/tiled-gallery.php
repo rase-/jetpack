@@ -183,10 +183,12 @@ class Jetpack_Tiled_Gallery {
 			$likes_blog_id = Jetpack_Options::get_option( 'id' );
 		}
 
+		$extra_data = array( 'blog_id' => $blog_id, 'permalink' => get_permalink( isset( $post->ID ) ? $post->ID : 0 ), 'likes_blog_id' => $likes_blog_id );
+
 		return Jetpack_HTML_Builder::element( 'div' )
 			->addClass( $this->gallery_classes() )
 			->data( 'original-width', esc_attr( self::get_content_width() ) )
-			->data( 'carousel-extra', json_encode( array( 'blog_id' => $blog_id, 'permalink' => get_permalink( isset( $post->ID ) ? $post->ID : 0 ), 'likes_blog_id' => $likes_blog_id ) ) );
+			->raw( "data-carousel-extra='" . json_encode( $extra_data ) . "'" );
 	}
 
 	function generate_carousel_image_args( $image ) {
