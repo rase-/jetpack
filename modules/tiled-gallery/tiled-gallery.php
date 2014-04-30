@@ -124,12 +124,12 @@ class Jetpack_Tiled_Gallery {
 		Jetpack_Tiled_Gallery_Shape::reset_last_shape();
 
 		$needs_attachment_link = ! ( isset( $this->atts['link'] ) && $this->atts['link'] == 'file' );
-		$output = $this->generate_carousel_container();
+		$container = $this->generate_carousel_container();
 		foreach ( $grouper->grouped_images as $row ) {
-			$output .= $row->HTML( $needs_attachment_link, $this->attrs['grayscale'] );
+			$container->content( $row->HTML( $needs_attachment_link, $this->attrs['grayscale'] ) );
 		}
-		$output .= '</div>';
-		return $output;
+
+		return $container->build();
 	}
 
 	public function square_talavera( $attachments ) {
@@ -145,7 +145,7 @@ class Jetpack_Tiled_Gallery {
 			$remainder_space = ( $remainder * $margin ) * 2;
 			$remainder_size = ceil( ( $content_width - $remainder_space - $margin ) / $remainder );
 		}
-		$output = $this->generate_carousel_container();
+		$container = $this->generate_carousel_container();
 		$c = 1;
 		foreach( $attachments as $image ) {
 			if ( $remainder > 0 && $c <= $remainder )
@@ -157,11 +157,11 @@ class Jetpack_Tiled_Gallery {
 
 			$item = new Jetpack_Tiled_Gallery_Item( $image, $needs_attachment_link, 'square' );
 
-			$output .= $item->HTML( $this->attrs['grayscale'] );
+			$container->content( $item->HTML( $this->attrs['grayscale'] ) );
 			$c ++;
 		}
-		$output .= '</div>';
-		return $output;
+
+		return $container->build();
 	}
 
 	public function circle_talavera( $attachments ) {
@@ -175,7 +175,6 @@ class Jetpack_Tiled_Gallery {
 	function generate_carousel_container() {
 		global $post;
 
-		$html = '<div '. $this->gallery_classes() . ' data-original-width="' . esc_attr( self::get_content_width() ) . '">';
 		$blog_id = (int) get_current_blog_id();
 
 		if ( defined( 'IS_WPCOM' ) && IS_WPCOM ) {
@@ -184,13 +183,10 @@ class Jetpack_Tiled_Gallery {
 			$likes_blog_id = Jetpack_Options::get_option( 'id' );
 		}
 
-		$extra_data = array( 'data-carousel-extra' => array( 'blog_id' => $blog_id, 'permalink' => get_permalink( isset( $post->ID ) ? $post->ID : 0 ), 'likes_blog_id' => $likes_blog_id ) );
-
-		foreach ( (array) $extra_data as $data_key => $data_values ) {
-			$html = str_replace( '<div ', '<div ' . esc_attr( $data_key ) . "='" . json_encode( $data_values ) . "' ", $html );
-		}
-
-		return $html;
+		return Jetpack_HTML_Builder::element( 'div' )
+			->addClass( $this->gallery_classes() )
+			->data( 'original-width', esc_attr( self::get_content_width() ) )
+			->data( 'carousel-extra', json_encode( array( 'blog_id' => $blog_id, 'permalink' => get_permalink( isset( $post->ID ) ? $post->ID : 0 ), 'likes_blog_id' => $likes_blog_id ) ) );
 	}
 
 	function generate_carousel_image_args( $image ) {
@@ -235,8 +231,7 @@ class Jetpack_Tiled_Gallery {
 	}
 
 	public function gallery_classes() {
-		$classes = 'class="tiled-gallery type-' . esc_attr( $this->atts['type'] ) . ' tiled-gallery-unresized"';
-		return $classes;
+		return 'tiled-gallery type-' . esc_attr( $this->atts['type'] ) . ' tiled-gallery-unresized';
 	}
 
 	public static function gallery_already_redefined() {
