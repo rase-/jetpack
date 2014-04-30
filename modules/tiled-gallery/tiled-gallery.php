@@ -4,11 +4,12 @@
 // Here the constrained array element is the dimension of a row, group or an image in the tiled gallery.
 include_once dirname( __FILE__ ) . '/math/class-constrained-array-rounding.php';
 include_once dirname( __FILE__ ) . '/tiled-gallery/tiled-gallery-mosaic.php';
-include_once dirname( __FILE__ ) . '/tiled-gallery/tiled-gallery-item.php';
+include_once dirname( __FILE__ ) . '/tiled-gallery/tiled-gallery-square.php';
 
 jetpack_require_lib( 'class.html-tag-builder' );
 
 class Jetpack_Tiled_Gallery {
+	private static $talaveras = array( 'rectangular', 'square', 'circle', 'rectangle' );
 
 	public function __construct() {
 		add_action( 'admin_init', array( $this, 'settings_api_init' ) );
@@ -104,10 +105,14 @@ class Jetpack_Tiled_Gallery {
 		if ( is_feed() || defined( 'IS_HTML_EMAIL' ) )
 			return '';
 
-		if ( method_exists( $this, $this->atts['type'] . '_talavera' ) ) {
+		if ( in_array( $this->atts['type'], self::$talaveras ) ) {
 			// Enqueue styles and scripts
 			self::default_scripts_and_styles();
-			$gallery_html = call_user_func_array( array( $this, $this->atts['type'] . '_talavera' ), array( $attachments ) );
+			$gallery = ( 'rectangular' == $this->atts['type'] )
+				? new Jetpack_Tiled_Gallery_Layout_Mosaic( $attachments, $this->atts['type'], $this->atts['link'], $this->atts['grayscale'] )
+				: new Jetpack_Tiled_Gallery_Layout_Square( $attachments, $this->atts['type'], $this->atts['link'], $this->atts['grayscale'] );
+
+			$gallery_html = $gallery->HTML();
 
 			if ( $gallery_html && class_exists( 'Jetpack' ) && class_exists( 'Jetpack_Photon' ) ) {
 				// Tiled Galleries in Jetpack require that Photon be active.
@@ -120,83 +125,6 @@ class Jetpack_Tiled_Gallery {
 		}
 
 		return '';
-	}
-
-	public function rectangular_talavera( $attachments ) {
-		$grouper = new Jetpack_Tiled_Gallery_Grouper( $attachments );
-
-		Jetpack_Tiled_Gallery_Shape::reset_last_shape();
-
-		$needs_attachment_link = ! ( isset( $this->atts['link'] ) && $this->atts['link'] == 'file' );
-		$container = $this->generate_carousel_container();
-		foreach ( $grouper->grouped_images as $row ) {
-			$container->content( $row->HTML( $needs_attachment_link, $this->attrs['grayscale'] ) );
-		}
-
-		return $container->build();
-	}
-
-	public function square_talavera( $attachments ) {
-		$needs_attachment_link = ! ( isset( $this->atts['link'] ) && $this->atts['link'] == 'file' );
-		$content_width = self::get_content_width();
-		$images_per_row = 3;
-		$margin = 2;
-
-		$margin_space = ( $images_per_row * $margin ) * 2;
-		$size = floor( ( $content_width - $margin_space ) / $images_per_row );
-		$remainder = count( $attachments ) % $images_per_row;
-		if ( $remainder > 0 ) {
-			$remainder_space = ( $remainder * $margin ) * 2;
-			$remainder_size = ceil( ( $content_width - $remainder_space - $margin ) / $remainder );
-		}
-		$container = $this->generate_carousel_container();
-		$c = 1;
-		foreach( $attachments as $image ) {
-			if ( $remainder > 0 && $c <= $remainder )
-				$img_size = $remainder_size;
-			else
-				$img_size = $size;
-
-			$image->width = $image->height = $img_size;
-
-			$item = new Jetpack_Tiled_Gallery_Item( $image, $needs_attachment_link, 'square' );
-
-			$container->content( $item->HTML( $this->attrs['grayscale'] ) );
-			$c ++;
-		}
-
-		return $container->build();
-	}
-
-	public function circle_talavera( $attachments ) {
-		return $this->square_talavera( $attachments );
-	}
-
-	public function rectangle_talavera( $attachments ) {
-		return $this->rectangular_talavera( $attachments );
-	}
-
-	function generate_carousel_container() {
-		global $post;
-
-		$blog_id = (int) get_current_blog_id();
-
-		if ( defined( 'IS_WPCOM' ) && IS_WPCOM ) {
-			$likes_blog_id = $blog_id;
-		} else {
-			$likes_blog_id = Jetpack_Options::get_option( 'id' );
-		}
-
-		$extra_data = array( 'blog_id' => $blog_id, 'permalink' => get_permalink( isset( $post->ID ) ? $post->ID : 0 ), 'likes_blog_id' => $likes_blog_id );
-
-		return Jetpack_HTML_Tag_Builder::element( 'div' )
-			->addClass( $this->gallery_classes() )
-			->data( 'original-width', esc_attr( self::get_content_width() ) )
-			->raw( "data-carousel-extra='" . json_encode( $extra_data ) . "'" );
-	}
-
-	public function gallery_classes() {
-		return 'tiled-gallery type-' . esc_attr( $this->atts['type'] ) . ' tiled-gallery-unresized';
 	}
 
 	public static function gallery_already_redefined() {

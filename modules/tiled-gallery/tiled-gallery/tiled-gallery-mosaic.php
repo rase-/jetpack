@@ -1,6 +1,21 @@
 <?php
 jetpack_require_lib( 'class.html-tag-builder' );
+require_once dirname( __FILE__ ) . '/tiled-gallery-layout.php';
 require_once dirname( __FILE__ ) . '/tiled-gallery-item.php';
+
+class Jetpack_Tiled_Gallery_Layout_Mosaic extends Jetpack_Tiled_Gallery_Layout {
+	public function HTML() {
+		$grouper = new Jetpack_Tiled_Gallery_Grouper( $this->attachments );
+		Jetpack_Tiled_Gallery_Shape::reset_last_shape();
+
+		$container = $this->generate_carousel_container();
+		foreach ( $grouper->grouped_images as $row ) {
+			$container->content( $row->HTML( $this->needs_attachment_link, $this->grayscale ) );
+		}
+
+		return $container->build();
+	}
+}
 
 class Jetpack_Tiled_Gallery_Grouper {
 	public $margin = 4;
