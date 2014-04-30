@@ -646,7 +646,7 @@ class Jetpack_Tiled_Gallery_Item {
 		}
 
 		// Caption
-		if ( trim( $image->post_excerpt ) ) {
+		if ( trim( $this->image->post_excerpt ) ) {
 			$el->content( $this->caption() );
 		}
 
