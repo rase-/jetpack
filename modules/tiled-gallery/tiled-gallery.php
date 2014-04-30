@@ -4,7 +4,7 @@
 // Here the constrained array element is the dimension of a row, group or an image in the tiled gallery.
 include_once dirname( __FILE__ ) . '/math/class-constrained-array-rounding.php';
 
-jetpack_require_lib( 'class.html-builder' );
+jetpack_require_lib( 'class.html-tag-builder' );
 
 class Jetpack_Tiled_Gallery {
 
@@ -187,7 +187,7 @@ class Jetpack_Tiled_Gallery {
 
 		$extra_data = array( 'blog_id' => $blog_id, 'permalink' => get_permalink( isset( $post->ID ) ? $post->ID : 0 ), 'likes_blog_id' => $likes_blog_id );
 
-		return Jetpack_HTML_Builder::element( 'div' )
+		return Jetpack_HTML_Tag_Builder::element( 'div' )
 			->addClass( $this->gallery_classes() )
 			->data( 'original-width', esc_attr( self::get_content_width() ) )
 			->raw( "data-carousel-extra='" . json_encode( $extra_data ) . "'" );
@@ -552,7 +552,7 @@ class Jetpack_Tiled_Gallery_Row {
 	}
 
 	public function HTML( $needs_attachment_link, $grayscale ) {
-		$el = Jetpack_HTML_Builder::element( 'div' )
+		$el = Jetpack_HTML_Tag_Builder::element( 'div' )
 				->addClass( 'gallery-row' )
 				->css( 'width', esc_attr( $this->width ) . 'px' )
 				->css( 'height', esc_attr( $this->height ) . 'px' );
@@ -583,7 +583,7 @@ class Jetpack_Tiled_Gallery_Group {
 	}
 
 	public function HTML( $needs_attachment_link, $grayscale ) {
-		$el = Jetpack_HTML_Builder::element( 'div' )
+		$el = Jetpack_HTML_Tag_Builder::element( 'div' )
 				->addClass( 'gallery-group', 'images-' . esc_attr( count( $this->images ) ) )
 				->css( 'width', esc_attr( $this->width ) . 'px' )
 				->css( 'height', esc_attr( $this->height ) . 'px' );
@@ -621,11 +621,11 @@ class Jetpack_Tiled_Gallery_Item {
 
 	public function HTML( $grayscale ) {
 		// Base elements
-		$el = Jetpack_HTML_Builder::element( 'div' )
+		$el = Jetpack_HTML_Tag_Builder::element( 'div' )
 				->addClass( 'tiled-gallery-item', 'tiled-gallery-item-' . esc_attr( $this->size ) );
-		$a = Jetpack_HTML_Builder::element( 'a' )
+		$a = Jetpack_HTML_Tag_Builder::element( 'a' )
 				->href( esc_url( $this->link ) );
-		$img = Jetpack_HTML_Builder::element( 'img' )
+		$img = Jetpack_HTML_Tag_Builder::element( 'img' )
 				->raw( Jetpack_Tiled_Gallery_Item::generate_carousel_image_args( $this->image ) )
 				->src( esc_url( $this->img_src ) )
 				->width( esc_attr( $this->image->width ) )
@@ -658,9 +658,9 @@ class Jetpack_Tiled_Gallery_Item {
 	}
 
 	private function grayscale_image() {
-		$a = Jetpack_HTML_Builder::element( 'a' )
+		$a = Jetpack_HTML_Tag_Builder::element( 'a' )
 				->href( esc_url( $this->link ) );
-		$img = Jetpack_HTML_Builder::element( 'img' )
+		$img = Jetpack_HTML_Tag_Builder::element( 'img' )
 				->raw( Jetpack_Tiled_Gallery_Item::generate_carousel_image_args( $this->image ) )
 				->addClass( 'grayscale' )
 				->width( esc_attr( $this->image->width ) )
@@ -681,7 +681,7 @@ class Jetpack_Tiled_Gallery_Item {
 	}
 
 	private function caption() {
-		return Jetpack_HTML_Builder::element( 'div' )
+		return Jetpack_HTML_Tag_Builder::element( 'div' )
 				->addClass( 'tiled-gallery-caption' )
 				->content( wptexturize( $this->image->post_excerpt ) );
 	}
