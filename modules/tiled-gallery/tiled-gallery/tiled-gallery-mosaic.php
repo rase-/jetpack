@@ -1,6 +1,7 @@
 <?php
 jetpack_require_lib( 'class.html-tag-builder' );
 require_once dirname( __FILE__ ) . '/tiled-gallery-layout.php';
+require_once dirname( __FILE__ ) . '/tiled-gallery-shape.php';
 require_once dirname( __FILE__ ) . '/tiled-gallery-item.php';
 
 class Jetpack_Tiled_Gallery_Layout_Mosaic extends Jetpack_Tiled_Gallery_Layout {
