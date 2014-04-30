@@ -4,6 +4,8 @@
 // Here the constrained array element is the dimension of a row, group or an image in the tiled gallery.
 include_once dirname( __FILE__ ) . '/math/class-constrained-array-rounding.php';
 
+jetpack_require_lib( 'class.html-builder' );
+
 class Jetpack_Tiled_Gallery {
 
 	public function __construct() {
