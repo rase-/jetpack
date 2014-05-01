@@ -3,6 +3,7 @@
 jetpack_require_lib( 'class.html-tag-builder' );
 
 abstract class Jetpack_Tiled_Gallery_Layout {
+	protected $type; // Defined in child classes
 	public $attachments;
 	public $link;
 	public $grayscale;

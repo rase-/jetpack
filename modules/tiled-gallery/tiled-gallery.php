@@ -3,6 +3,8 @@
 // Include the class file containing methods for rounding constrained array elements.
 // Here the constrained array element is the dimension of a row, group or an image in the tiled gallery.
 include_once dirname( __FILE__ ) . '/math/class-constrained-array-rounding.php';
+
+// Layouts
 include_once dirname( __FILE__ ) . '/tiled-gallery/tiled-gallery-rectangular.php';
 include_once dirname( __FILE__ ) . '/tiled-gallery/tiled-gallery-square.php';
 include_once dirname( __FILE__ ) . '/tiled-gallery/tiled-gallery-circle.php';
