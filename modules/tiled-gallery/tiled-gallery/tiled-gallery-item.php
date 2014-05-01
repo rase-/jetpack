@@ -116,13 +116,13 @@ class Jetpack_Tiled_Gallery_Item {
 		$attachment_title = wptexturize( $image->post_title );
 		$attachment_desc  = wpautop( wptexturize( $image->post_content ) );
 
-        // Not yet providing geo-data, need to "fuzzify" for privacy
+		// Not yet providing geo-data, need to "fuzzify" for privacy
 		if ( ! empty( $img_meta ) ) {
-            foreach ( $img_meta as $k => $v ) {
-                if ( 'latitude' == $k || 'longitude' == $k )
-                    unset( $img_meta[$k] );
-            }
-        }
+			foreach ( $img_meta as $k => $v ) {
+				if ( 'latitude' == $k || 'longitude' == $k )
+					unset( $img_meta[$k] );
+			}
+		}
 
 		$img_meta = json_encode( array_map( 'strval', $img_meta ) );
 
