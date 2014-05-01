@@ -1,13 +1,12 @@
 <?php
 jetpack_require_lib( 'class.html-tag-builder' );
 
-class Jetpack_Tiled_Gallery_Item {
-	private $image;
+abstract class Jetpack_Tiled_Gallery_Item {
+	protected $image;
 
-	public function __construct( $attachment_image, $needs_attachment_link, $grayscale, $type ) {
+	public function __construct( $attachment_image, $needs_attachment_link, $grayscale ) {
 		$this->image = $attachment_image;
 		$this->grayscale = $grayscale;
-		$this->type = $type;
 
 		$this->size = 'large';
 
@@ -20,10 +19,6 @@ class Jetpack_Tiled_Gallery_Item {
 		$this->link = $needs_attachment_link ? get_attachment_link( $this->image->ID, $this->orig_file ) : $this->orig_file;
 
 		$this->img_src = add_query_arg( array( 'w' => $this->image->width, 'h' => $this->image->height ), $this->orig_file );
-
-		$this->img_src_grayscale = ( 'mosaic' == $type )
-			? jetpack_photon_url( $this->img_src, array( 'filter' => 'grayscale' ) )
-			: esc_url( 'http://en.wordpress.com/imgpress?url=' . urlencode( $this->image->guid ) . '&resize=' . $this->image->width . ',' . $this->image->height . '&filter=grayscale' );
 	}
 
 	public function HTML() {
@@ -31,13 +26,7 @@ class Jetpack_Tiled_Gallery_Item {
 		list( $el, $a, $img ) = $this->build_base_elements();
 
 		// Set layout type specific things
-		if ( 'square' == $this->type ) {
-			$img->css( 'margin', esc_attr( $margin ) . 'px' );
-			$a->border('0');
-		} else if ( 'mosaic' == $this->type ) {
-			$el->addClass( 'tiled-gallery-item-' . esc_attr( $this->size ) );
-			$img->align( 'left' );
-		}
+		list( $el, $a, $img ) = $this->extra_basic_attributes( $el, $a, $img );
 
 		// Build basic nested structure
 		$el->content( $a->content( $img ) );
@@ -55,7 +44,9 @@ class Jetpack_Tiled_Gallery_Item {
 		return $el->build();
 	}
 
-	private function build_base_elements() {
+	protected abstract function extra_basic_attributes( $el, $a, $img );
+
+	protected function build_base_elements() {
 		$el = Jetpack_HTML_Tag_Builder::element( 'div' )
 				->addClass( 'tiled-gallery-item' );
 		$a = Jetpack_HTML_Tag_Builder::element( 'a' )
@@ -71,7 +62,7 @@ class Jetpack_Tiled_Gallery_Item {
 		return array( $el, $a, $img );
 	}
 
-	private function grayscale_image() {
+	protected function grayscale_image() {
 		$a = Jetpack_HTML_Tag_Builder::element( 'a' )
 				->href( esc_url( $this->link ) );
 		$img = Jetpack_HTML_Tag_Builder::element( 'img' )
@@ -83,18 +74,14 @@ class Jetpack_Tiled_Gallery_Item {
 				->title( esc_attr( $this->image_title ) )
 				->alt( esc_attr( $this->image_alt ) );
 
-		if ( 'square' == $this->type ) {
-			$a->border('0');
-			$img->css( 'margin', '2px' );
-			$img->src( esc_url( 'http://en.wordpress.com/imgpress?url=' . urlencode( $this->image->guid ) . '&resize=' . $this->image->width . ',' . $this->image->height . '&filter=grayscale' ) );
-		} else if ( 'mosaic' == $this->type ) {
-			$img->src( esc_url( $this->img_src_grayscale ) );
-		}
-
+		list( $a, $img ) = $this->extra_grayscale_attributes( $a, $img );
 		return $a->content( $img );
 	}
 
-	private function caption() {
+
+	protected abstract function extra_grayscale_attributes( $el, $a );
+
+	protected function caption() {
 		return Jetpack_HTML_Tag_Builder::element( 'div' )
 				->addClass( 'tiled-gallery-caption' )
 				->content( wptexturize( $this->image->post_excerpt ) );
@@ -140,5 +127,48 @@ class Jetpack_Tiled_Gallery_Item {
 			);
 		return $output;
 	}
+}
+
+class Jetpack_Tiled_Gallery_Rectangular_Item extends Jetpack_Tiled_Gallery_Item {
+	public function __construct( $attachment_image, $needs_attachment_link, $grayscale ) {
+		parent::__construct( $attachment_image, $needs_attachment_link, $grayscale );
+		$this->img_src_grayscale = jetpack_photon_url( $this->img_src, array( 'filter' => 'grayscale' ) );
+	}
+
+	protected function extra_grayscale_attributes( $a, $img ) {
+		$img->src( esc_url( $this->img_src_grayscale ) );
+		return array( $el, $a, $img );
+	}
+
+	protected function extra_basic_attributes( $el, $a, $img ) {
+		$el->addClass( 'tiled-gallery-item-' . esc_attr( $this->size ) );
+		$img->align( 'left' );
+
+		return array( $el, $a, $img );
+	}
+}
+
+class Jetpack_Tiled_Gallery_Square_Item extends Jetpack_Tiled_Gallery_Item {
+	public function __construct( $attachment_image, $needs_attachment_link, $grayscale ) {
+		parent::__construct( $attachment_image, $needs_attachment_link, $grayscale );
+		$this->img_src_grayscale = esc_url( 'http://en.wordpress.com/imgpress?url=' . urlencode( $this->image->guid ) . '&resize=' . $this->image->width . ',' . $this->image->height . '&filter=grayscale' );
+	}
+
+	protected function extra_grayscale_attributes( $a, $img ) {
+		$a->border('0');
+		$img->css( 'margin', '2px' );
+		$img->src( esc_url( 'http://en.wordpress.com/imgpress?url=' . urlencode( $this->image->guid ) . '&resize=' . $this->image->width . ',' . $this->image->height . '&filter=grayscale' ) );
+		return array( $el, $a, $img );
+	}
+
+	protected function extra_basic_attributes( $el, $a, $img ) {
+		$img->css( 'margin', esc_attr( $margin ) . 'px' );
+		$a->border('0');
+
+		return array( $el, $a, $img );
+	}
+}
+
+class Jetpack_Tiled_Gallery_Circle_Item extends Jetpack_Tiled_Gallery_Square_Item {
 }
 ?>

@@ -201,7 +201,7 @@ class Jetpack_Tiled_Gallery_Group {
 				->css( 'height', esc_attr( $this->height ) . 'px' );
 
 		foreach ( $this->images as $image ) {
-			$gallery_item = new Jetpack_Tiled_Gallery_Item( $image, $needs_attachment_link, $grayscale, 'mosaic' );
+			$gallery_item = new Jetpack_Tiled_Gallery_Rectangular_Item( $image, $needs_attachment_link, $grayscale );
 			$el->content( $gallery_item->HTML() );
 		}
 
