@@ -76,13 +76,6 @@ class Jetpack_Tiled_Gallery {
 		return $attachments;
 	}
 
-	public function get_attachment_link( $attachment_id, $orig_file ) {
-		if ( isset( $this->atts['link'] ) && $this->atts['link'] == 'file' )
-			return $orig_file;
-		else
-			return get_attachment_link( $attachment_id );
-	}
-
 	public static function default_scripts_and_styles() {
 		wp_enqueue_script( 'tiled-gallery', plugins_url( 'tiled-gallery/tiled-gallery.js', __FILE__ ), array( 'jquery' ) );
 		wp_enqueue_style( 'tiled-gallery', plugins_url( 'tiled-gallery/tiled-gallery.css', __FILE__ ), array(), '2012-09-21' );
