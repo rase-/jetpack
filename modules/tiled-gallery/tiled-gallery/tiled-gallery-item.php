@@ -27,6 +27,34 @@ class Jetpack_Tiled_Gallery_Item {
 
 	public function HTML( $grayscale ) {
 		// Base elements
+		list( $el, $a, $img ) = $this->build_base_elements();
+
+		// Set layout type specific things
+		if ( 'square' == $this->type ) {
+			$img->css( 'margin', esc_attr( $margin ) . 'px' );
+			$a->border('0');
+		} else if ( 'mosaic' == $this->type ) {
+			$el->addClass( 'tiled-gallery-item-' . esc_attr( $this->size ) );
+			$img->align( 'left' );
+		}
+
+		// Build basic nested structure
+		$el->content( $a->content( $img ) );
+
+		// Possibly a grayscale overlay
+		if ( $grayscale == true ) {
+			$el->content( $this->grayscale_image() );
+		}
+
+		// Caption
+		if ( trim( $this->image->post_excerpt ) ) {
+			$el->content( $this->caption() );
+		}
+
+		return $el->build();
+	}
+
+	private function build_base_elements() {
 		$el = Jetpack_HTML_Tag_Builder::element( 'div' )
 				->addClass( 'tiled-gallery-item' );
 		$a = Jetpack_HTML_Tag_Builder::element( 'a' )
@@ -39,29 +67,7 @@ class Jetpack_Tiled_Gallery_Item {
 				->title( esc_attr( $this->image_title ) )
 				->alt( esc_attr( $this->image_alt ) );
 
-		// Set layout type specific things
-		if ( 'square' == $this->type ) {
-			$img->css( 'margin', esc_attr( $margin ) . 'px' );
-			$a->border('0');
-		} else if ( 'mosaic' == $this->type ) {
-			$el->addClass( 'tiled-gallery-item-' . esc_attr( $this->size ) );
-			$img->align( 'left' );
-		}
-
-		// Build basic structure
-		$el->content( $a->content( $img ) );
-
-		// Grayscale overlay
-		if ( $grayscale == true ) {
-			$el->content( $this->grayscale_image() );
-		}
-
-		// Caption
-		if ( trim( $this->image->post_excerpt ) ) {
-			$el->content( $this->caption() );
-		}
-
-		return $el->build();
+		return array( $el, $a, $img );
 	}
 
 	private function grayscale_image() {
