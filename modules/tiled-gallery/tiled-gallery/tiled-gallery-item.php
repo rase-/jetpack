@@ -4,8 +4,9 @@ jetpack_require_lib( 'class.html-tag-builder' );
 class Jetpack_Tiled_Gallery_Item {
 	private $image;
 
-	public function __construct( $attachment_image, $needs_attachment_link, $type ) {
+	public function __construct( $attachment_image, $needs_attachment_link, $grayscale, $type ) {
 		$this->image = $attachment_image;
+		$this->grayscale = $grayscale;
 		$this->type = $type;
 
 		$this->size = 'large';
@@ -25,7 +26,7 @@ class Jetpack_Tiled_Gallery_Item {
 			: esc_url( 'http://en.wordpress.com/imgpress?url=' . urlencode( $this->image->guid ) . '&resize=' . $this->image->width . ',' . $this->image->height . '&filter=grayscale' );
 	}
 
-	public function HTML( $grayscale ) {
+	public function HTML() {
 		// Base elements
 		list( $el, $a, $img ) = $this->build_base_elements();
 
@@ -42,7 +43,7 @@ class Jetpack_Tiled_Gallery_Item {
 		$el->content( $a->content( $img ) );
 
 		// Possibly a grayscale overlay
-		if ( $grayscale == true ) {
+		if ( $this->grayscale == true ) {
 			$el->content( $this->grayscale_image() );
 		}
 

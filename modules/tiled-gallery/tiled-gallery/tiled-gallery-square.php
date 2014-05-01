@@ -27,9 +27,9 @@ class Jetpack_Tiled_Gallery_Layout_Square extends Jetpack_Tiled_Gallery_Layout {
 
 			$image->width = $image->height = $img_size;
 
-			$item = new Jetpack_Tiled_Gallery_Item( $image, $this->needs_attachment_link, 'square' );
+			$item = new Jetpack_Tiled_Gallery_Item( $image, $this->needs_attachment_link, $this->grayscale, 'square' );
 
-			$container->content( $item->HTML( $this->grayscale ) );
+			$container->content( $item->HTML() );
 			$c ++;
 		}
 
