@@ -28,7 +28,7 @@ class Jetpack_Tiled_Gallery_Item {
 	public function HTML( $grayscale ) {
 		// Base elements
 		$el = Jetpack_HTML_Tag_Builder::element( 'div' )
-				->addClass( 'tiled-gallery-item', 'tiled-gallery-item-' . esc_attr( $this->size ) );
+				->addClass( 'tiled-gallery-item' );
 		$a = Jetpack_HTML_Tag_Builder::element( 'a' )
 				->href( esc_url( $this->link ) );
 		$img = Jetpack_HTML_Tag_Builder::element( 'img' )
@@ -44,6 +44,7 @@ class Jetpack_Tiled_Gallery_Item {
 			$img->css( 'margin', esc_attr( $margin ) . 'px' );
 			$a->border('0');
 		} else if ( 'mosaic' == $this->type ) {
+			$el->addClass( 'tiled-gallery-item-' . esc_attr( $this->size ) );
 			$img->align( 'left' );
 		}
 
