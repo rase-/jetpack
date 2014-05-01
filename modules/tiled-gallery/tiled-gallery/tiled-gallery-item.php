@@ -20,7 +20,9 @@ class Jetpack_Tiled_Gallery_Item {
 
 		$this->img_src = add_query_arg( array( 'w' => $this->image->width, 'h' => $this->image->height ), $this->orig_file );
 
-		$this->img_src_grayscale = jetpack_photon_url( $this->img_src, array( 'filter' => 'grayscale' ) );
+		$this->img_src_grayscale = ( 'mosaic' == $type )
+			? jetpack_photon_url( $this->img_src, array( 'filter' => 'grayscale' ) )
+			: esc_url( 'http://en.wordpress.com/imgpress?url=' . urlencode( $this->image->guid ) . '&resize=' . $this->image->width . ',' . $this->image->height . '&filter=grayscale' );
 	}
 
 	public function HTML( $grayscale ) {
