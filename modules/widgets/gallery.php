@@ -143,7 +143,7 @@ class Jetpack_Gallery_Widget extends WP_Widget {
 
 		$widget_tiled_gallery->default_scripts_and_styles();
 
-		$layout = new Jetpack_Tiled_Gallery_Layout_Mosaic( $instance['attachments'], 'rectangular', $instance['link'], false );
+		$layout = new Jetpack_Tiled_Gallery_Layout_Rectangular( $instance['attachments'], $instance['link'], false );
 
 		return $layout->HTML();
 	}
@@ -168,7 +168,7 @@ class Jetpack_Gallery_Widget extends WP_Widget {
 
 		$widget_tiled_gallery->default_scripts_and_styles();
 
-		$layout = new Jetpack_Tiled_Gallery_Layout_Square( $instance['attachments'], 'square', $instance['link'], false );
+		$layout = new Jetpack_Tiled_Gallery_Layout_Square( $instance['attachments'], $instance['link'], false );
 
 		return $layout->HTML();
 	}
@@ -195,7 +195,7 @@ class Jetpack_Gallery_Widget extends WP_Widget {
 
 		$widget_tiled_gallery->default_scripts_and_styles();
 
-		$layout = new Jetpack_Tiled_Gallery_Layout_Square( $instance['attachments'], 'circle', $instance['link'], false );
+		$layout = new Jetpack_Tiled_Gallery_Layout_Circle( $instance['attachments'], $instance['link'], false );
 
 		return $layout->HTML();
 	}
