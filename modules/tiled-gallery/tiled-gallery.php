@@ -6,8 +6,6 @@ include_once dirname( __FILE__ ) . '/math/class-constrained-array-rounding.php';
 include_once dirname( __FILE__ ) . '/tiled-gallery/tiled-gallery-mosaic.php';
 include_once dirname( __FILE__ ) . '/tiled-gallery/tiled-gallery-square.php';
 
-jetpack_require_lib( 'class.html-tag-builder' );
-
 class Jetpack_Tiled_Gallery {
 	private static $talaveras = array( 'rectangular', 'square', 'circle', 'rectangle' );
 
