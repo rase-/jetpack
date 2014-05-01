@@ -3,8 +3,9 @@
 // Include the class file containing methods for rounding constrained array elements.
 // Here the constrained array element is the dimension of a row, group or an image in the tiled gallery.
 include_once dirname( __FILE__ ) . '/math/class-constrained-array-rounding.php';
-include_once dirname( __FILE__ ) . '/tiled-gallery/tiled-gallery-mosaic.php';
+include_once dirname( __FILE__ ) . '/tiled-gallery/tiled-gallery-rectangular.php';
 include_once dirname( __FILE__ ) . '/tiled-gallery/tiled-gallery-square.php';
+include_once dirname( __FILE__ ) . '/tiled-gallery/tiled-gallery-circle.php';
 
 class Jetpack_Tiled_Gallery {
 	private static $talaveras = array( 'rectangular', 'square', 'circle', 'rectangle' );
@@ -99,10 +100,10 @@ class Jetpack_Tiled_Gallery {
 		if ( in_array( $this->atts['type'], self::$talaveras ) ) {
 			// Enqueue styles and scripts
 			self::default_scripts_and_styles();
-			$gallery = ( 'rectangular' == $this->atts['type'] )
-				? new Jetpack_Tiled_Gallery_Layout_Mosaic( $attachments, $this->atts['type'], $this->atts['link'], $this->atts['grayscale'] )
-				: new Jetpack_Tiled_Gallery_Layout_Square( $attachments, $this->atts['type'], $this->atts['link'], $this->atts['grayscale'] );
 
+			// Generate gallery HTML
+			$gallery_class = 'Jetpack_Tiled_Gallery_Layout_' . ucfirst( $this->atts['type'] );
+			$gallery = new $gallery_class( $attachments, $this->atts['link'], $this->atts['grayscale'] );
 			$gallery_html = $gallery->HTML();
 
 			if ( $gallery_html && class_exists( 'Jetpack' ) && class_exists( 'Jetpack_Photon' ) ) {

@@ -4,12 +4,10 @@ jetpack_require_lib( 'class.html-tag-builder' );
 
 abstract class Jetpack_Tiled_Gallery_Layout {
 	public $attachments;
-	public $type;
 	public $link;
 	public $grayscale;
 
-	public function __construct( $attachments, $type, $link, $grayscale ) {
-		$this->type = $type;
+	public function __construct( $attachments, $link, $grayscale ) {
 		$this->attachments = $attachments;
 		$this->needs_attachment_link = ! ( isset( $link ) && $link == 'file' );
 		$this->grayscale = $grayscale;
@@ -37,7 +35,7 @@ abstract class Jetpack_Tiled_Gallery_Layout {
 	}
 
 	protected function gallery_classes() {
-		return 'tiled-gallery type-' . esc_attr( $this->type ) . ' tiled-gallery-unresized';
+		return 'tiled-gallery type-' . esc_attr( $this->type  ) . ' tiled-gallery-unresized';
 	}
 }
 ?>

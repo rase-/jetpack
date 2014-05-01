@@ -3,6 +3,8 @@ require_once dirname( __FILE__ ) . '/tiled-gallery-layout.php';
 require_once dirname( __FILE__ ) . '/tiled-gallery-item.php';
 
 class Jetpack_Tiled_Gallery_Layout_Square extends Jetpack_Tiled_Gallery_Layout {
+	protected $type = 'square';
+
 	public function HTML() {
 		$content_width = Jetpack_Tiled_Gallery::get_content_width();
 		$images_per_row = 3;

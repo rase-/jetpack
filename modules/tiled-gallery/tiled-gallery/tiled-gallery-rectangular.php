@@ -4,7 +4,9 @@ require_once dirname( __FILE__ ) . '/tiled-gallery-layout.php';
 require_once dirname( __FILE__ ) . '/tiled-gallery-shape.php';
 require_once dirname( __FILE__ ) . '/tiled-gallery-item.php';
 
-class Jetpack_Tiled_Gallery_Layout_Mosaic extends Jetpack_Tiled_Gallery_Layout {
+class Jetpack_Tiled_Gallery_Layout_Rectangular extends Jetpack_Tiled_Gallery_Layout {
+	protected $type = 'rectangular';
+
 	public function HTML() {
 		$grouper = new Jetpack_Tiled_Gallery_Grouper( $this->attachments );
 		Jetpack_Tiled_Gallery_Shape::reset_last_shape();
@@ -18,6 +20,10 @@ class Jetpack_Tiled_Gallery_Layout_Mosaic extends Jetpack_Tiled_Gallery_Layout {
 	}
 }
 
+// Alias
+class Jetpack_Tiled_Gallery_Layout_Rectangle extends Jetpack_Tiled_Gallery_Layout_Rectangular {}
+
+// Image grouping and HTML generation logic
 class Jetpack_Tiled_Gallery_Grouper {
 	public $margin = 4;
 	public function __construct( $attachments ) {
