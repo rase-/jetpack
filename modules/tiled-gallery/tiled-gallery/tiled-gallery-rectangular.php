@@ -1,5 +1,4 @@
 <?php
-jetpack_require_lib( 'class.html-tag-builder' );
 require_once dirname( __FILE__ ) . '/tiled-gallery-layout.php';
 require_once dirname( __FILE__ ) . '/tiled-gallery-shape.php';
 require_once dirname( __FILE__ ) . '/tiled-gallery-item.php';
@@ -11,12 +10,8 @@ class Jetpack_Tiled_Gallery_Layout_Rectangular extends Jetpack_Tiled_Gallery_Lay
 		$grouper = new Jetpack_Tiled_Gallery_Grouper( $this->attachments );
 		Jetpack_Tiled_Gallery_Shape::reset_last_shape();
 
-		$container = $this->generate_carousel_container();
-		foreach ( $grouper->grouped_images as $row ) {
-			$container->content( $row->HTML( $this->needs_attachment_link, $this->grayscale ) );
-		}
-
-		return $container->build();
+		$this->rows = $grouper->grouped_images;
+		return parent::HTML();
 	}
 }
 
@@ -162,18 +157,6 @@ class Jetpack_Tiled_Gallery_Row {
 		}
 		return $weighted_ratio > 0 ? $weighted_ratio : 1;
 	}
-
-	public function HTML( $needs_attachment_link, $grayscale ) {
-		$el = Jetpack_HTML_Tag_Builder::element( 'div' )
-				->addClass( 'gallery-row' )
-				->css( 'width', esc_attr( $this->width ) . 'px' )
-				->css( 'height', esc_attr( $this->height ) . 'px' );
-		foreach ( $this->groups as $group ) {
-			$el->content( $group->HTML( $needs_attachment_link, $grayscale ) );
-		}
-
-		return $el->build();
-	}
 }
 
 class Jetpack_Tiled_Gallery_Group {
@@ -194,18 +177,13 @@ class Jetpack_Tiled_Gallery_Group {
 		return 1/$ratio;
 	}
 
-	public function HTML( $needs_attachment_link, $grayscale ) {
-		$el = Jetpack_HTML_Tag_Builder::element( 'div' )
-				->addClass( 'gallery-group', 'images-' . esc_attr( count( $this->images ) ) )
-				->css( 'width', esc_attr( $this->width ) . 'px' )
-				->css( 'height', esc_attr( $this->height ) . 'px' );
-
+	public function items( $needs_attachment_link, $grayscale ) {
+		$items = array();
 		foreach ( $this->images as $image ) {
-			$gallery_item = new Jetpack_Tiled_Gallery_Rectangular_Item( $image, $needs_attachment_link, $grayscale );
-			$el->content( $gallery_item->HTML() );
+			$items[] = new Jetpack_Tiled_Gallery_Rectangular_Item( $image, $needs_attachment_link, $grayscale );
 		}
 
-		return $el->build();
+		return $items;
 	}
 }
 ?>

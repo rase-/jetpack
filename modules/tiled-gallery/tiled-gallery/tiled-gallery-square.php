@@ -38,13 +38,8 @@ class Jetpack_Tiled_Gallery_Layout_Square extends Jetpack_Tiled_Gallery_Layout {
 	}
 
 	public function HTML() {
-		$items = $this->compute_items();
-		$container = $this->generate_carousel_container();
-		foreach ( $items as $item ) {
-			$container->content( $item->HTML() );
-		}
-
-		return $container->build();
+		$this->items = $this->compute_items();
+		return parent::HTML();
 	}
 }
 ?>
