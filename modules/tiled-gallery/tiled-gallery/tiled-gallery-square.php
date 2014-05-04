@@ -5,7 +5,7 @@ require_once dirname( __FILE__ ) . '/tiled-gallery-item.php';
 class Jetpack_Tiled_Gallery_Layout_Square extends Jetpack_Tiled_Gallery_Layout {
 	protected $type = 'square';
 
-	public function HTML() {
+	private function compute_items() {
 		$content_width = Jetpack_Tiled_Gallery::get_content_width();
 		$images_per_row = 3;
 		$margin = 2;
@@ -17,7 +17,8 @@ class Jetpack_Tiled_Gallery_Layout_Square extends Jetpack_Tiled_Gallery_Layout {
 			$remainder_space = ( $remainder * $margin ) * 2;
 			$remainder_size = ceil( ( $content_width - $remainder_space - $margin ) / $remainder );
 		}
-		$container = $this->generate_carousel_container();
+
+		$items = array();
 		$c = 1;
 		foreach( $this->attachments as $image ) {
 			if ( $remainder > 0 && $c <= $remainder )
@@ -29,12 +30,21 @@ class Jetpack_Tiled_Gallery_Layout_Square extends Jetpack_Tiled_Gallery_Layout {
 
 			$item = new Jetpack_Tiled_Gallery_Square_Item( $image, $this->needs_attachment_link, $this->grayscale );
 
-			$container->content( $item->HTML() );
+			$items[] = $item;
 			$c ++;
 		}
 
-		return $container->build();
+		return $items;
+	}
 
+	public function HTML() {
+		$items = $this->compute_items();
+		$container = $this->generate_carousel_container();
+		foreach ( $items as $item ) {
+			$container->content( $item->HTML() );
+		}
+
+		return $container->build();
 	}
 }
 ?>
