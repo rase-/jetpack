@@ -3,7 +3,7 @@
 		<a href="<?php echo $item->link; ?>" border="0">
 			<img
 				<?php require dirname( __FILE__ ) . '/carousel-image-args.php'; ?>
-				src="<?php echo $item->img_src; ?>"
+				src="<?php echo esc_url( $item->img_src ); ?>"
 				width="<?php echo esc_attr( $item->image->width ); ?>"
 				height="<?php echo esc_attr( $item->image->height ); ?>"
 				title="<?php echo esc_attr( $item->image_title ); ?>"
@@ -16,7 +16,7 @@
 				<img
 					<?php require dirname( __FILE__ ) . '/carousel-image-args.php'; ?>
 					class="grayscale"
-					src="<?php echo esc_url( $item->image_src_grayscale ) ?>"
+					src="<?php echo esc_url( $item->img_src_grayscale ); ?>"
 					width="<?php echo esc_attr( $item->image->width ); ?>"
 					height="<?php echo esc_attr( $item->image->height ); ?>"
 					title="<?php echo esc_attr( $item->image_title ); ?>"
