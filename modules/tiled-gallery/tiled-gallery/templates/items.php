@@ -1,7 +1,8 @@
 <?php foreach ( $this->items as $item ): ?>
 	<div class="tiled-gallery-item<?php if ( isset( $item->size ) ) echo " tiled-gallery-item-$item->size"; ?>">
 		<a href="<?php echo $item->link; ?>" border="0">
-			<img <?php echo Jetpack_Tiled_Gallery_Item::generate_carousel_image_args( $item->image ); ?>
+			<img
+				<?php require dirname( __FILE__ ) . '/carousel-image-args.php'; ?>
 				src="<?php echo $item->img_src; ?>"
 				width="<?php echo esc_attr( $item->image->width ); ?>"
 				height="<?php echo esc_attr( $item->image->height ); ?>"
@@ -12,7 +13,8 @@
 
 		<?php if ( $this->grayscale == true ): ?>
 			<a href="<?php echo $item->link; ?>" border="0">
-				<img <?php echo Jetpack_Tiled_Gallery_Item::generate_carousel_image_args( $item->image ); ?>
+				<img
+					<?php require dirname( __FILE__ ) . '/carousel-image-args.php'; ?>
 					class="grayscale"
 					src="<?php echo esc_url( $item->image_src_grayscale ) ?>"
 					width="<?php echo esc_attr( $item->image->width ); ?>"

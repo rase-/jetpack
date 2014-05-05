@@ -8,6 +8,7 @@ abstract class Jetpack_Tiled_Gallery_Layout {
 
 	public function __construct( $attachments, $link, $grayscale ) {
 		$this->attachments = $attachments;
+		$lthis->link = $link;
 		$this->needs_attachment_link = ! ( isset( $link ) && $link == 'file' );
 		$this->grayscale = $grayscale;
 	}
