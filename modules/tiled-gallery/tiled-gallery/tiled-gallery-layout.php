@@ -17,10 +17,18 @@ abstract class Jetpack_Tiled_Gallery_Layout {
 		// Render the carousel container template, which will take the
 		// appropriate strategy to fill it
 		ob_start();
-		require dirname( __FILE__) . '/templates/carousel-container.php';
+		$this->template( 'carousel-container' );
 		$html = ob_get_clean();
 
 		return $html;
+	}
+
+	private function template( $name ) {
+		require dirname( __FILE__ ) . "/templates/$name.php";
+	}
+
+	private function partial( $name ) {
+		require dirname( __FILE__ ) . "/templates/partials/$name.php";
 	}
 
 	protected function get_container_extra_data() {

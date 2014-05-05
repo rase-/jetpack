@@ -9,7 +9,7 @@
 			style="width: <?php echo esc_attr( $group->width ); ?>px; height: <?php echo esc_attr( $group->height ); ?>px;"
 		>
 			<?php $this->items = $group->items( $this->needs_attachment_link, $this->grayscale ); ?>
-			<?php require dirname( __FILE__ ) . '/items.php'; ?>
+			<?php $this->partial( 'items' ); ?>
 		</div> <!-- close group -->
 	<?php endforeach; ?>
 	</div> <!-- close row -->
