@@ -1,6 +1,10 @@
 <?php
 
 abstract class Jetpack_Tiled_Gallery_Layout {
+	// Template whitelist
+	private static $templates = array( 'carousel-container', 'circle-layout', 'rectangular-layout', 'square-layout' );
+	private static $partials = array( 'carousel-image-args', 'items' );
+
 	protected $type; // Defined in child classes
 	public $attachments;
 	public $link;
@@ -24,10 +28,12 @@ abstract class Jetpack_Tiled_Gallery_Layout {
 	}
 
 	private function template( $name ) {
+		if ( ! in_array( $name, self::$templates ) ) return;
 		require dirname( __FILE__ ) . "/templates/$name.php";
 	}
 
 	private function partial( $name ) {
+		if ( ! in_array( $name, self::$partials ) ) return;
 		require dirname( __FILE__ ) . "/templates/partials/$name.php";
 	}
 
