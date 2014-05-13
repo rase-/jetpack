@@ -57,6 +57,7 @@ class Jetpack_Photon {
 
 		// Core image retrieval
 		add_filter( 'image_downsize', array( $this, 'filter_image_downsize' ), 10, 3 );
+		add_filter( 'wp_get_attachment_url', array( __CLASS__, 'filter_get_attachment_url' ), 10, 2 );
 
 		// Helpers for maniuplated images
 		add_action( 'wp_enqueue_scripts', array( $this, 'action_wp_enqueue_scripts' ), 9 );
@@ -322,6 +323,10 @@ class Jetpack_Photon {
 	 ** CORE IMAGE RETRIEVAL
 	 **/
 
+	public static function filter_get_attachment_url( $url, $post_id ) {
+		return jetpack_photon_url( $url );
+	}
+
 	/**
 	 * Filter post thumbnail image retrieval, passing images through Photon
 	 *
@@ -450,7 +455,7 @@ class Jetpack_Photon {
 			return false;
 
 		// Bail if the image alredy went through Photon
-		if ( preg_match( '#^i[\d]{1}.wp.com$#i', $url_info['host'] ) )
+		if ( preg_match( '#^i[\d]{1}.wp.com$#i', $url_info['host'] ) && preg_match( '#[&\?](resize|fit)=#i', $url ) )
 			return false;
 
 		// Bail if no path is found
