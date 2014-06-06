@@ -13,13 +13,16 @@ add_action( 'media_buttons', 'grunion_media_button', 999 );
 function grunion_media_button( ) {
 	global $post_ID, $temp_ID;
 	$iframe_post_id = (int) (0 == $post_ID ? $temp_ID : $post_ID);
+	$post = get_post( $iframe_post_id );
+	$button_text = ( has_shortcode( $post->post_content, 'contact-form' ) ) ? 'Update Contact Form' : 'Add Contact Form';
+
 	$title = esc_attr( __( 'Add a custom form', 'jetpack' ) );
 	$plugin_url = esc_url( GRUNION_PLUGIN_URL );
 	$site_url = esc_url( admin_url( "/admin-ajax.php?post_id={$iframe_post_id}&action=grunion_form_builder&TB_iframe=true&width=768" ) );
 	?>
 
 	<a id="insert-jetpack-contact-form" class="button thickbox" title="<?php esc_html_e( 'Add Contact Form', 'jetpack' ); ?>" data-editor="content" href="<?php echo $site_url ?>&id=add_form">
-		<span class="jetpack-contact-form-icon"></span> <?php esc_html_e( 'Add Contact Form', 'jetpack' ); ?>
+		<span class="jetpack-contact-form-icon"></span> <?php esc_html_e( $button_text, 'jetpack' ); ?>
 	</a>
 
 	<?php
@@ -204,7 +207,7 @@ function grunion_post_type_columns_filter( $cols ) {
 add_action( 'manage_posts_custom_column', 'grunion_manage_post_columns', 10, 2 );
 function grunion_manage_post_columns( $col, $post_id ) {
 	global $post;
-	
+
 	/**
 	 * Only call parse_fields_from_content if we're dealing with a Grunion custom column.
 	 */
@@ -212,8 +215,8 @@ function grunion_manage_post_columns( $col, $post_id ) {
 		return;
 	}
 
-	$content_fields = Grunion_Contact_Form_Plugin::parse_fields_from_content( $post_id );	
-	
+	$content_fields = Grunion_Contact_Form_Plugin::parse_fields_from_content( $post_id );
+
 	switch ( $col ) {
 		case 'feedback_from':
 			$author_name  = $content_fields['_feedback_author'];
@@ -568,44 +571,45 @@ function grunion_ajax_spam() {
 		$status = wp_insert_post( $post );
 		wp_transition_post_status( 'publish', 'spam', $post );
 		do_action( 'contact_form_akismet', 'spam', $akismet_values );
-		
+
 		$comment_author_email = $reply_to_addr = $message = $to = $headers = false;
 		$blog_url = parse_url( site_url() );
-		
+
 		// resend the original email
 		$email = get_post_meta( $post_id, '_feedback_email', TRUE );
 		$content_fields = Grunion_Contact_Form_Plugin::parse_fields_from_content( $post_id );
-		
+
 		if ( !empty( $emails ) && !empty( $content_fields ) ) {
 			if ( isset( $content_fields['_feedback_author_email'] ) )
 				$comment_author_email = $content_fields['_feedback_author_email'];
-				
+
 			if ( isset( $email['to'] ) )
 				$to = $email['to'];
-			
+
 			if ( isset( $email['message'] ) )
 				$message = $email['message'];
-				
+
 			if ( isset( $email['headers'] ) )
 				$headers = $email['headers'];
 			else {
 				$headers = 'From: "' . $content_fields['_feedback_author'] .'" <wordpress@' . $blog_url['host']  . ">\r\n";
-				
+
 				if ( !empty( $comment_author_email ) )
 					$reply_to_addr = $comment_author_email;
 				elseif ( is_array( $to ) )
 					$reply_to_addr = $to[0];
-					
+
 				if ( $reply_to_addr )
 					$headers .= 'Reply-To: "' . $content_fields['_feedback_author'] .'" <' . $reply_to_addr . ">\r\n";
-					
-				$headers .= "Content-Type: text/plain; charset=\"" . get_option('blog_charset') . "\"";					
-			}	
-				
+
+				$headers .= "Content-Type: text/plain; charset=\"" . get_option('blog_charset') . "\"";
+			}
+
 			$subject = apply_filters( 'contact_form_subject', $content_fields['_feedback_subject'] );
-			
+
 			wp_mail( $to, $subject, $message, $headers );
-		}	
+		}
+
 	} elseif( $_POST['make_it'] == 'publish' ) {
 		if ( !current_user_can($post_type_object->cap->delete_post, $post_id) )
 			wp_die( __( 'You are not allowed to move this item out of the Trash.', 'jetpack' ) );
