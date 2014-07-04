@@ -1,4 +1,8 @@
 /* global module */
+var fs = require('fs');
+var recursive = require( 'recursive-readdir' );
+var sys = require( 'sys' );
+var exec = require( 'child_process' ).exec;
 
 module.exports = function(grunt) {
 	var path = require( 'path' ),
@@ -25,22 +29,22 @@ module.exports = function(grunt) {
 		},
 		cssjanus: {
 			core: {
-				options: { 
-					swapLtrRtlInUrl: false 
+				options: {
+					swapLtrRtlInUrl: false
 				},
 				expand: true,
-				ext: '-rtl.css', 
+				ext: '-rtl.css',
 				src: ['_inc/*.css','!_inc/*-rtl.css','!_inc/*.min.css'  ]
 			},
 			min: {
-				options: { 
-					swapLtrRtlInUrl: false 
+				options: {
+					swapLtrRtlInUrl: false
 				},
 				expand: true,
-				ext: '-rtl.min.css', 
+				ext: '-rtl.min.css',
 				src: ['_inc/*.min.css','!_inc/*-rtl.min.css' ]
-			}             
-		}, 
+			}
+		},
 		jshint: {
 			options: grunt.file.readJSON('.jshintrc'),
 			src: [
@@ -187,4 +191,31 @@ module.exports = function(grunt) {
 		'cssjanus:min',
 	]);
 
+	grunt.registerTask( 'browserify', 'Intermediate JS build step', function() {
+		var done = this.async(),
+		    folder;
+
+		recursive( './modules/', function( err, files ) {
+			if ( err ) throw err;
+
+			files.forEach(function( file ) {
+				folder = file.substr( 0, file.length - 'index.js'.length );
+				if ( file.indexOf('/js/index.js', this.length - '/js/index.js'.length) !== -1 ) {
+					(function( folder ) {
+						exec( './node_modules/browserify/bin/cmd.js ' + folder, function( err, stdout, stderr) {
+							console.log( stdout );
+							console.log( folder.replace( 'js/', 'bundle.js' ) );
+							(function( folder ) {
+								fs.writeFile( folder.replace( 'js/', 'bundle.js' ), stdout, function( err ) {
+									if ( err ) throw err;
+
+									done();
+								});
+							})( folder );
+						});
+					})( folder );
+				}
+			});
+		});
+	});
 };
